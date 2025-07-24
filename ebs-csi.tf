@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "ebs_assume_role_policy" {
     condition {
       test     = "StringEquals"
       variable = "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
+      values   = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"] # service-account assumes roles
     }
   }
 }
@@ -30,3 +30,14 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
   role       = aws_iam_role.ebs_csi_controller.name
 }
+
+#eksctl create iamserviceaccount \
+#    --name ebs-csi-controller-sa \
+#    --namespace kube-system \
+#    --cluster robot-shop-cluster \
+#    --role-name AmazonEKS_EBS_CSI_DriverRole \
+#    --role-only \
+#    --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+#    --profile terraform-cloud-user \
+#    --region ap-southeast-1 \
+#    --approve
